@@ -7,7 +7,7 @@
 */
 
 #include <NECIRrcv.h>
-#define IRPIN 11 // pin that IR detector is connected to
+#define IRPIN 11
 
 NECIRrcv ir(IRPIN);
 
@@ -84,7 +84,7 @@ void loop()
     }
     /*SI COMPROBAR ESTADO DEVUELVE FALSE, ESTE SALDRÁ DEL WHILE*/
     ComprobarEstado();
-  }
+  } // FIN DEL WHILE
 }
 // FIN DEL LOOP
 
