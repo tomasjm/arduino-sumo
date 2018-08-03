@@ -1,15 +1,15 @@
 /*
   Programa de control de motores
-  Kit: N°19
+  KIT AUTO: N°09
   Version IDE: Arduino 1.6.11
   Autor: Tomas Jimenez
   Fecha: 24/07/2018
 */
 
 #include <NECIRrcv.h>
-#define IRPIN 11    // pin that IR detector is connected to
+#define IRPIN 11 // pin that IR detector is connected to
 
-NECIRrcv ir(IRPIN) ;
+NECIRrcv ir(IRPIN);
 
 byte PIN_LED = 3;
 
@@ -32,9 +32,8 @@ int VALOR_SL;
 bool SUPERFICIE_NEGRA;
 bool PRENDIDO;
 
-
-
-void setup() {
+void setup()
+{
   // Pines de velocidad
   pinMode(ENA, OUTPUT);
   pinMode(ENB, OUTPUT);
@@ -54,75 +53,88 @@ void setup() {
   Serial.println("monitor inicializado");
 }
 
-void loop() {
+void loop()
+{
   unsigned long ircode;
 
   // Comprueba la señal infrarrojo
-  while (ir.available()) {
+  while (ir.available())
+  {
+    // Si es que llega una señal infrarroja, guardará su valor en la variable "ircode"
     ircode = ir.read();
     Serial.println(ircode, HEX);
   }
-
-  // FUNCION COMPROBAR ESTADO, DEVUELVE PRENDIDO O APAGADO, SI ESTÁ PRENDIDO :: PRENDIDO = true
+  // FUNCION COMPROBAR ESTADO, DEVUELVE PRENDIDO O APAGADO, SI ESTÁ PRENDIDO ENTONCES:: PRENDIDO = true
   ComprobarEstado();
-  // ENTRA AL WHILE SOLO SI ES QUE ESTA PRENDIDO
-  while (PRENDIDO = true ) {
-      //REALIZA MIENTRAS ESTÁ PRENDIDO
-      //COMPROBAR SI LA SUPERFICIE ES NEGRA O BLANCA
-      //SUPERFICIE_NEGRA = TRUE :: FALSE
-      Superficie();
-      if (SUPERFICIE_NEGRA) {
-        Parar();
-      } else {
-        Avanzar();
-      }
-      /*SI COMPROBAR ESTADO DEVUELVE FALSE, ESTE SALDRÁ DEL WHILE*/
-      ComprobarEstado();
+  // ENTRA AL WHILE SOLO SI ES QUE PRENDIDO = TRUE
+  while (PRENDIDO = true)
+  {
+    //REALIZA MIENTRAS ESTÁ PRENDIDO
+    //COMPROBAR SI LA SUPERFICIE ES NEGRA O BLANCA
+    //SUPERFICIE_NEGRA = TRUE :: FALSE
+    Superficie();
+    if (SUPERFICIE_NEGRA)
+    {
+      Derecha(1000, 255);
+      Avanzar(0, 255);
     }
+    else
+    {
+      Avanzar(0, 255);
+    }
+    /*SI COMPROBAR ESTADO DEVUELVE FALSE, ESTE SALDRÁ DEL WHILE*/
+    ComprobarEstado();
   }
+}
+// FIN DEL LOOP
 
-
-
-} // FIN DEL LOOP
-
-
+/*-------------- FUNCIONES --------*/
 
 //FUNCION PARA COMPROBAR SI ESTÁ PRENDIDO O APAGADO
 // DEVUELVE TRUE O FALSE
-void ComprobarEstado() {
-  if (ircode == 0x6F905583) {
+void ComprobarEstado()
+{
+  if (ircode == 0x6F905583)
+  {
     digitalWrite(PIN_LED, HIGH);
     Serial.println("led on");
     PRENDIDO = true;
-  } else if (ircode == 0x77885583) {
+  }
+  else if (ircode == 0x77885583)
+  {
     digitalWrite(PIN_LED, LOW);
     Serial.println("led off");
     PRENDIDO = false;
+    Parar();
   }
 }
-
 //FUNCION COMPROBAR SUPERFICIA
-void Superficie() {
+void Superficie()
+{
   // RANGOS
   // BLANCO 640 - 1017 NEGRO. 828 PROMEDIO
   VALOR_SL = analogRead(PIN_SL);
-  if (VALOR_SL > 828) {
+  if (VALOR_SL > 828)
+  {
     SUPERFICIE_NEGRA = true;
-  } else if (VALOR_SL < 828 ) {
+  }
+  else if (VALOR_SL < 828)
+  {
     SUPERFICIE_NEGRA = false;
   }
   Serial.println(VALOR_SL);
   Serial.print("SUPERFICIA NEGRA ");
   Serial.println(SUPERFICIE_NEGRA);
 }
-
-// Funciones
-void Avanzar() {
+//FUNCIONES DE ACCION DE MOTORES
+//TIEMPO EN MILESIMAS DEL DELAY, Y VELOCIDAD CON RANGOS DE 0-255, USAR 185-255 PARA MINIMIZAR ERRORES DE ENERGIA
+void Avanzar(int tiempo, int velocidad)
+{
   // CASOS
   // 6 señales
   //// 2 velocidad
-  analogWrite(ENA, 255); //0 - 255
-  analogWrite(ENB, 255);
+  analogWrite(ENA, velocidad); //0 - 255
+  analogWrite(ENB, velocidad);
   //// 4 giro
   //// Motor derecho
   digitalWrite(IN1, LOW);
@@ -130,8 +142,10 @@ void Avanzar() {
   //// Motor izquierdo
   digitalWrite(IN3, LOW);
   digitalWrite(IN4, HIGH);
+  delay(tiempo);
 }
-void Parar() {
+void Parar(int tiempo)
+{
   // CASOS
   // 6 señales
   //// 2 velocidad
@@ -144,13 +158,15 @@ void Parar() {
   //// Motor izquierdo
   digitalWrite(IN3, LOW);
   digitalWrite(IN4, HIGH);
+  delay(tiempo);
 }
-void Retroceder() {
+void Retroceder(int tiempo, int velocidad)
+{
   // CASOS
   // 6 señales
   //// 2 velocidad
-  analogWrite(ENA, 255); //0 - 255
-  analogWrite(ENB, 255);
+  analogWrite(ENA, velocidad); //0 - 255
+  analogWrite(ENB, velocidad);
   //// 4 giro
   //// Motor derecho
   digitalWrite(IN1, HIGH);
@@ -158,13 +174,15 @@ void Retroceder() {
   //// Motor izquierdo
   digitalWrite(IN3, HIGH);
   digitalWrite(IN4, LOW);
+  delay(tiempo);
 }
-void Derecha() {
+void Derecha(int tiempo, int velocidad)
+{
   // CASOS
   // 6 señales
   //// 2 velocidad
-  analogWrite(ENA, 255); //0 - 255
-  analogWrite(ENB, 255);
+  analogWrite(ENA, velocidad); //0 - 255
+  analogWrite(ENB, velocidad);
   //// 4 giro
   //// Motor derecho
   digitalWrite(IN1, HIGH);
@@ -172,13 +190,15 @@ void Derecha() {
   //// Motor izquierdo
   digitalWrite(IN3, LOW);
   digitalWrite(IN4, HIGH);
+  delay(tiempo);
 }
-void Izquierda() {
+void Izquierda(int tiempo, int velocidad)
+{
   // CASOS
   // 6 señales
   //// 2 velocidad
-  analogWrite(ENA, 255); //0 - 255
-  analogWrite(ENB, 255);
+  analogWrite(ENA, velocidad); //0 - 255
+  analogWrite(ENB, velocidad);
   //// 4 giro
   //// Motor derecho
   digitalWrite(IN1, LOW);
@@ -186,7 +206,5 @@ void Izquierda() {
   //// Motor izquierdo
   digitalWrite(IN3, HIGH);
   digitalWrite(IN4, LOW);
+  delay(tiempo);
 }
-
-
-
