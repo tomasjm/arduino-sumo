@@ -26,11 +26,19 @@ byte IN4 = 10;
 //// Pin seguidor de linea
 byte PIN_SL = A2;
 
+//// Pines de sensor ultrasonico
+
+byte pinEcho = 12;
+byte pinTrigger = 13;
+
 // VALORES
 //// Valor seguidor de linea
 int VALOR_SL;
 bool SUPERFICIE_NEGRA;
 bool PRENDIDO;
+
+//// Valores sensor ultrasonico
+unsigned int val_tiempo, val_distancia;
 
 void setup()
 {
@@ -44,6 +52,9 @@ void setup()
   pinMode(IN4, OUTPUT);
   // Pin de led
   pinMode(PIN_LED, OUTPUT);
+  // Pines sensor ultrasonico
+  pinMode(pinEcho, INPUT);
+  pinMode(pinTrigger, OUTPUT);
 
   //Inicializar receptor de infrarrojo
   ir.begin();
@@ -80,7 +91,16 @@ void loop()
     }
     else
     {
-      Avanzar(0, 255);
+      // Se calculará la distancia en centrimetos
+      CalcDistancia();
+      if (val_distancia <= 10)
+      {
+        Avanzar(1000, 255);
+      }
+      else
+      {
+        Izquierda(500, 255);
+      }
     }
     /*SI COMPROBAR ESTADO DEVUELVE FALSE, ESTE SALDRÁ DEL WHILE*/
     ComprobarEstado();
@@ -125,6 +145,23 @@ void Superficie()
   Serial.println(VALOR_SL);
   Serial.print("SUPERFICIA NEGRA ");
   Serial.println(SUPERFICIE_NEGRA);
+}
+// Funcion para calcular distancia de objetos
+void calcDistancia()
+{
+  digitalWrite(pinTrigger, LOW);
+  delayMicroseconds(5);
+  digitalWrite(pinTrigger, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(pinTrigger, LOW);
+
+  val_tiempo = pulseIn(pinEcho, HIGH);
+
+  val_distancia = val_tiempo / 58;
+
+  Serial.print(val_distancia);
+  Serial.println(" centimetros");
+  delay(200);
 }
 //FUNCIONES DE ACCION DE MOTORES
 //TIEMPO EN MILESIMAS DEL DELAY, Y VELOCIDAD CON RANGOS DE 0-255, USAR 185-255 PARA MINIMIZAR ERRORES DE ENERGIA
