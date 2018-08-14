@@ -3,7 +3,7 @@
   KIT AUTO: N°09
   Version IDE: Arduino 1.6.11
   Autor: Tomas Jimenez
-  Fecha: 24/07/2018
+  Fecha: 07/08/2018
 */
 
 #include <NECIRrcv.h>
@@ -24,7 +24,7 @@ byte IN3 = 9;
 byte IN4 = 10;
 
 //// Pin seguidor de linea
-byte PIN_SL = A2;
+byte PIN_SL = A0;
 
 //// Pines de sensor ultrasonico
 
@@ -37,6 +37,8 @@ int VALOR_SL;
 bool SUPERFICIE_NEGRA;
 bool PRENDIDO;
 
+
+unsigned long ircode;
 //// Valores sensor ultrasonico
 unsigned int val_tiempo, val_distancia;
 
@@ -66,8 +68,6 @@ void setup()
 
 void loop()
 {
-  unsigned long ircode;
-
   // Comprueba la señal infrarrojo
   while (ir.available())
   {
@@ -78,28 +78,29 @@ void loop()
   // FUNCION COMPROBAR ESTADO, DEVUELVE PRENDIDO O APAGADO, SI ESTÁ PRENDIDO ENTONCES:: PRENDIDO = true
   ComprobarEstado();
   // ENTRA AL WHILE SOLO SI ES QUE PRENDIDO = TRUE
-  while (PRENDIDO = true)
+  while (PRENDIDO)
   {
+    Serial.println();
+    Serial.println("Auto prendido");
     //REALIZA MIENTRAS ESTÁ PRENDIDO
     //COMPROBAR SI LA SUPERFICIE ES NEGRA O BLANCA
     //SUPERFICIE_NEGRA = TRUE :: FALSE
     Superficie();
     if (SUPERFICIE_NEGRA)
     {
-      Derecha(1000, 255);
-      Avanzar(0, 255);
+      Retroceder(500, 255);
+      Derecha(750, 200);
+      Avanzar(250, 200);
     }
     else
     {
       // Se calculará la distancia en centrimetos
       CalcDistancia();
-      if (val_distancia <= 10)
+      if (val_distancia < 30)
       {
-        Avanzar(1000, 255);
-      }
-      else
-      {
-        Izquierda(500, 255);
+        Avanzar(0, 200);
+      } else {
+        Avanzar(0, 200);
       }
     }
     /*SI COMPROBAR ESTADO DEVUELVE FALSE, ESTE SALDRÁ DEL WHILE*/
@@ -114,18 +115,25 @@ void loop()
 // DEVUELVE TRUE O FALSE
 void ComprobarEstado()
 {
+  while (ir.available())
+  {
+    // Si es que llega una señal infrarroja, guardará su valor en la variable "ircode"
+    ircode = ir.read();
+    Serial.println(ircode, HEX);
+  }
   if (ircode == 0x6F905583)
   {
     digitalWrite(PIN_LED, HIGH);
-    Serial.println("led on");
+    Serial.print("Auto encendido, LED ON");
+    Serial.print(" || ");
     PRENDIDO = true;
   }
   else if (ircode == 0x77885583)
   {
     digitalWrite(PIN_LED, LOW);
-    Serial.println("led off");
+    Serial.println("Auto apagado, LED OFF");
     PRENDIDO = false;
-    Parar();
+    Parar(0);
   }
 }
 //FUNCION COMPROBAR SUPERFICIA
@@ -134,20 +142,23 @@ void Superficie()
   // RANGOS
   // BLANCO 640 - 1017 NEGRO. 828 PROMEDIO
   VALOR_SL = analogRead(PIN_SL);
-  if (VALOR_SL > 828)
+  if (VALOR_SL > 785)
   {
     SUPERFICIE_NEGRA = true;
   }
-  else if (VALOR_SL < 828)
+  else if (VALOR_SL < 785)
   {
     SUPERFICIE_NEGRA = false;
   }
-  Serial.println(VALOR_SL);
-  Serial.print("SUPERFICIA NEGRA ");
-  Serial.println(SUPERFICIE_NEGRA);
+  Serial.print("VALOR DE SUPERFICIE: ");
+  Serial.print(VALOR_SL);
+  Serial.print(" || ");
+  Serial.print("SUPERFICIE NEGRA: ");
+  Serial.print(SUPERFICIE_NEGRA);
+  Serial.print(" || ");
 }
 // Funcion para calcular distancia de objetos
-void calcDistancia()
+void CalcDistancia()
 {
   digitalWrite(pinTrigger, LOW);
   delayMicroseconds(5);
@@ -158,10 +169,9 @@ void calcDistancia()
   val_tiempo = pulseIn(pinEcho, HIGH);
 
   val_distancia = val_tiempo / 58;
-
+  Serial.print("Detectado obstaculo a: ");
   Serial.print(val_distancia);
-  Serial.println(" centimetros");
-  delay(200);
+  Serial.print(" centimetros");
 }
 //FUNCIONES DE ACCION DE MOTORES
 //TIEMPO EN MILESIMAS DEL DELAY, Y VELOCIDAD CON RANGOS DE 0-255, USAR 185-255 PARA MINIMIZAR ERRORES DE ENERGIA
